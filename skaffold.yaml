@@ -1,10 +1,10 @@
 apiVersion: skaffold/v2beta5
 kind: Config
 metadata:
-  name: v2ray-exporter
+  name: 3x-ui-exporter
 build:
   artifacts:
-    - image: wi1dcard/v2ray-exporter
+    - image: ghcr.io/br3d/3x-ui-exporter
       docker:
         buildArgs:
           ARCH: amd64

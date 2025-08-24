@@ -1,11 +1,11 @@
-# V2Ray Exporter
+# 3X-UI Exporter
 
 [![Go Report Card](https://goreportcard.com/badge/github.com/wi1dcard/v2ray-exporter)][goreportcard]
 [![Build Status](https://app.travis-ci.com/wi1dcard/v2ray-exporter.svg?branch=master)][build-status]
 
-An exporter that collect V2Ray metrics over its [Stats API][stats-api] and export them to Prometheus.
+An exporter that collects 3X-UI (V2Ray/Xray) metrics over its [Stats API][stats-api] and exports them to Prometheus.
 
-- [V2Ray Exporter](#v2ray-exporter)
+- [3X-UI Exporter](#3x-ui-exporter)
   - [Quick Start](#quick-start)
     - [Binaries](#binaries)
     - [Third-party Packages](#third-party-packages)
@@ -26,29 +26,21 @@ An exporter that collect V2Ray metrics over its [Stats API][stats-api] and expor
 
 ## Quick Start
 
-### Binaries
-
-The latest binaries are made available on GitHub [releases][github-releases] page:
-
-```bash
-wget -O /tmp/v2ray-exporter https://github.com/wi1dcard/v2ray-exporter/releases/latest/download/v2ray-exporter_linux_amd64
-mv /tmp/v2ray-exporter /usr/local/bin/v2ray-exporter
-chmod +x /usr/local/bin/v2ray-exporter
-```
-
-### Third-party Packages
-
-- Arch Linux (@unknowndev233): <https://aur.archlinux.org/packages/v2ray-exporter>
-
 ### Docker (Recommended)
 
-You can also find the docker images built automatically by CI from [Docker Hub](https://hub.docker.com/r/wi1dcard/v2ray-exporter). The images are made for multi-arch. You can run it from your Raspberry Pi or any other ARM, ARM64 devices without changing the image name:
+You can pull the container image from GitHub Container Registry:
 
 ```bash
-docker run --rm -it wi1dcard/v2ray-exporter:<TAG>
+docker pull ghcr.io/br3d/3x-ui-exporter:latest
 ```
 
-Please note that `latest` tag is not available. Use `master` instead if you want the latest build of master branch.
+Or find the docker images built automatically by CI from [Docker Hub](https://github.com/br3d/3x-ui-exporter/pkgs/container/3x-ui-exporter). The images are made for multi-arch. You can run it from your Raspberry Pi or any other ARM, ARM64 devices without changing the image name:
+
+```bash
+docker run --rm -it ghcr.io/br3d/3x-ui-exporter:latest
+```
+
+Please note that `latest` tag is not available on Docker Hub. Use `master` instead if you want the latest build of master branch.
 
 ### Grafana Dashboard
 
@@ -60,7 +52,7 @@ Note that the dashboard on [grafana.com][grafana-dashboard-grafana-dot-com] may 
 
 Before we start, let's assume you have already set up Prometheus and Grafana.
 
-Firstly, you will need to make sure the API and statistics related features have been enabled in your V2Ray config file. For example:
+Firstly, you will need to make sure the API and statistics related features have been enabled in your 3X-UI (V2Ray/Xray) config file. For example:
 
 ```json
 {
@@ -110,7 +102,7 @@ Firstly, you will need to make sure the API and statistics related features have
         {
             "tag": "api",
             "listen": "127.0.0.1",
-            "port": 54321,
+            "port": 8080,
             "protocol": "dokodemo-door",
             "settings": {
                 "address": "127.0.0.1"
@@ -137,22 +129,22 @@ Firstly, you will need to make sure the API and statistics related features have
 }
 ```
 
-As you can see, we opened two inbounds in the configuration above. The first inbound accepts VMess connections from user `foo@example.com` and `bar@example.com`, and the second one listens port 54321 on localhost and handles the API calls, which is the endpoint that the exporter scrapes. If you'd like to run V2Ray and exporter on different machines, consider use `0.0.0.0` instead of `127.0.0.1` and be careful with the security risks.
+As you can see, we opened two inbounds in the configuration above. The first inbound accepts VMess connections from user `foo@example.com` and `bar@example.com`, and the second one listens port 8080 on localhost and handles the API calls, which is the endpoint that the exporter scrapes. If you'd like to run 3X-UI and exporter on different machines, consider use `0.0.0.0` instead of `127.0.0.1` and be careful with the security risks.
 
 Additionally, you should also enable `stats`, `api`, and `policy` settings, and setup proper routing rules in order to get traffic statistics works. For more information, please visit [The Beginner's Guide of V2Ray][v2ray-beginners-guide].
 
 The next step is to start the exporter:
 
 ```bash
-v2ray-exporter --v2ray-endpoint "127.0.0.1:54321"
+3xui-exporter --v2ray-endpoint "127.0.0.1:8080"
 ## Or
-docker run --rm -d wi1dcard/v2ray-exporter:master --v2ray-endpoint "127.0.0.1:54321"
+docker run --rm -d wi1dcard/v2ray-exporter:master --v2ray-endpoint "127.0.0.1:8080"
 ```
 
 The logs signifies that the exporter started to listening on the default address (`:9550`).
 
 ```plain
-V2Ray Exporter master-39eb972 (built 2020-04-05T05:32:01Z)
+3X-UI Exporter master-39eb972 (built 2020-04-05T05:32:01Z)
 time="2020-05-11T06:18:09Z" level=info msg="Server is ready to handle incoming scrape requests."
 ```
 
@@ -160,20 +152,24 @@ Use `--listen` option if you'd like to changing the listen address or port. You 
 
 ![browser.png][browser-screenshot]
 
-Click the `Scrape V2Ray Metrics` and the exporter will expose all metrics including V2Ray runtime and statistics data in the Prometheus metrics format, for example:
+The exporter provides two endpoints:
+- `/metrics` - Exporter's own metrics
+- `/scrape` - 3X-UI (V2Ray/Xray) metrics
+
+Click the `Scrape V2Ray Metrics` and the exporter will expose all metrics including 3X-UI runtime and statistics data in the Prometheus metrics format, for example:
 
 ```
 ...
-# HELP v2ray_up Indicate scrape succeeded or not
-# TYPE v2ray_up gauge
-v2ray_up 1
-# HELP v2ray_uptime_seconds V2Ray uptime in seconds
-# TYPE v2ray_uptime_seconds gauge
-v2ray_uptime_seconds 150624
+# HELP xray_up Indicate scrape succeeded or not
+# TYPE xray_up gauge
+xray_up 1
+# HELP xray_uptime_seconds 3X-UI uptime in seconds
+# TYPE xray_uptime_seconds gauge
+xray_uptime_seconds 150624
 ...
 ```
 
-If `v2ray_up 1` doesn't exist in the response, that means the scrape was failed, please check out the logs (STDOUT or STDERR) of V2Ray Exporter for more detailed information.
+If `xray_up 1` doesn't exist in the response, that means the scrape was failed, please check out the logs (STDOUT or STDERR) of 3X-UI Exporter for more detailed information.
 
 We have the metrics exposed. Now let Prometheus scrapes these data points and visualize them with Grafana. Here is an example Promtheus configuration:
 
@@ -183,7 +179,7 @@ global:
   scrape_timeout: 5s
 
 scrape_configs:
-  - job_name: v2ray
+  - job_name: 3xui
     metrics_path: /scrape
     static_configs:
       - targets: [IP:9550]
@@ -193,31 +189,31 @@ To learn more about Prometheus, please visit the [official docs][prometheus-docs
 
 ## Digging Deeper
 
-The exporter doesn't retain the original metric names from V2Ray intentionally. You may find out why in the [comments][explaination-of-metric-names].
+The exporter doesn't retain the original metric names from 3X-UI intentionally. You may find out why in the [comments][explaination-of-metric-names].
 
 For users who do not really care about the internal changes, but only need a mapping table, here it is:
 
 | Runtime Metric   | Exposed Metric                     |
 | :--------------- | :--------------------------------- |
-| `uptime`         | `v2ray_uptime_seconds`             |
-| `num_goroutine`  | `v2ray_goroutines`                 |
-| `alloc`          | `v2ray_memstats_alloc_bytes`       |
-| `total_alloc`    | `v2ray_memstats_alloc_bytes_total` |
-| `sys`            | `v2ray_memstats_sys_bytes`         |
-| `mallocs`        | `v2ray_memstats_mallocs_total`     |
-| `frees`          | `v2ray_memstats_frees_total`       |
+| `uptime`         | `xray_uptime_seconds`             |
+| `num_goroutine`  | `xray_goroutines`                 |
+| `alloc`          | `xray_memstats_alloc_bytes`       |
+| `total_alloc`    | `xray_memstats_alloc_bytes_total` |
+| `sys`            | `xray_memstats_sys_bytes`         |
+| `mallocs`        | `xray_memstats_mallocs_total`     |
+| `frees`          | `xray_memstats_frees_total`       |
 | `live_objects`   | Removed. See the appendix below.   |
-| `num_gc`         | `v2ray_memstats_num_gc`            |
-| `pause_total_ns` | `v2ray_memstats_pause_total_ns`    |
+| `num_gc`         | `xray_memstats_num_gc`            |
+| `pause_total_ns` | `xray_memstats_pause_total_ns`    |
 
 | Statistic Metric                          | Exposed Metric                                                              |
 | :---------------------------------------- | :-------------------------------------------------------------------------- |
-| `inbound>>>tag-name>>>traffic>>>uplink`   | `v2ray_traffic_uplink_bytes_total{dimension="inbound",target="tag-name"}`   |
-| `inbound>>>tag-name>>>traffic>>>downlink` | `v2ray_traffic_downlink_bytes_total{dimension="inbound",target="tag-name"}` |
-| `outbound>>>tag-name>>>traffic>>>uplink`   | `v2ray_traffic_uplink_bytes_total{dimension="outbound",target="tag-name"}`   |
-| `outbound>>>tag-name>>>traffic>>>downlink` | `v2ray_traffic_downlink_bytes_total{dimension="outbound",target="tag-name"}` |
-| `user>>>user-email>>traffic>>>uplink`     | `v2ray_traffic_uplink_bytes_total{dimension="user",target="user-email"}`    |
-| `user>>>user-email>>>traffic>>>downlink`  | `v2ray_traffic_downlink_bytes_total{dimension="user",target="user-email"}`  |
+| `inbound>>>tag-name>>>traffic>>>uplink`   | `xray_traffic_uplink_bytes_total{dimension="inbound",target="tag-name"}`   |
+| `inbound>>>tag-name>>>traffic>>>downlink` | `xray_traffic_downlink_bytes_total{dimension="inbound",target="tag-name"}` |
+| `outbound>>>tag-name>>>traffic>>>uplink`   | `xray_traffic_uplink_bytes_total{dimension="outbound",target="tag-name"}`   |
+| `outbound>>>tag-name>>>traffic>>>downlink` | `xray_traffic_downlink_bytes_total{dimension="outbound",target="tag-name"}` |
+| `user>>>user-email>>traffic>>>uplink`     | `xray_traffic_uplink_bytes_total{dimension="user",target="user-email"}`    |
+| `user>>>user-email>>>traffic>>>downlink`  | `xray_traffic_downlink_bytes_total{dimension="user",target="user-email"}`  |
 | ...                                       | ...                                                                         |
 
 - The value of `live_objects` can be calculated by `memstats_mallocs_total - memstats_frees_total`.
