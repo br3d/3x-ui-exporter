@@ -32,7 +32,7 @@ func NewExporter(endpoint string, scrapeTimeout time.Duration) (*Exporter, error
 		registry:      prometheus.NewRegistry(),
 
 		totalScrapes: prometheus.NewCounter(prometheus.CounterOpts{
-			Namespace: "v2ray",
+			Namespace: "xray",
 			Name:      "scrapes_total",
 			Help:      "Total number of scrapes performed",
 		}),
@@ -180,5 +180,5 @@ func (e *Exporter) registerConstMetric(ch chan<- prometheus.Metric, metric strin
 }
 
 func (e *Exporter) newMetricDescr(metricName string, docString string, labels []string) *prometheus.Desc {
-	return prometheus.NewDesc(prometheus.BuildFQName("v2ray", "", metricName), docString, labels, nil)
+	return prometheus.NewDesc(prometheus.BuildFQName("xray", "", metricName), docString, labels, nil)
 }
